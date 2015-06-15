@@ -9,3 +9,20 @@
 		errors: settings.getErrors('varnish')
 	}) }}
 </div>
+
+<h4>Varnish Purge Widget</h4>
+{{ forms.lightswitchField({
+	label: 'Enable Varnish Purge Widget?'|t,
+	id: 'uiWidget',
+	name: 'uiWidget',
+	on: settings.uiWidget,
+	errors: settings.getErrors('uiWidget')
+}) }}
+
+<h4>Varnish Servers</h4>
+{{ forms.editableTableField({
+	id: 'servers',
+	name: 'servers',
+	rows: servers,
+	cols: [{heading: 'URL', id: 'url', type: 'singleline'}]
+}) }}

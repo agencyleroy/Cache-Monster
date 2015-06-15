@@ -53,6 +53,10 @@ class CacheMonsterPlugin extends BasePlugin
 		$plugin = craft()->plugins->getPlugin('cachemonster');
 		$this->_settings = $plugin->getSettings();
 
+		if ($this->_settings->uiWidget) {
+			$this->initUIWidget();
+		}
+
 		/**
 		 * Before we save, grab the paths that are going to be purged
 		 * and save them to a cache
@@ -127,18 +131,45 @@ class CacheMonsterPlugin extends BasePlugin
 	public function getSettingsHtml()
 	{
 		return craft()->templates->render('cacheMonster/settings', array(
-			'settings' => $this->getSettings()
+			'settings' => $this->getSettings(),
+			'servers' => $this->getSettings()->servers
 		));
 	}
 
-	// Protected Methods
-	// =========================================================================
+	public function prepSettings($settings)
+	{
+		// Empty all servers
+		if(!isset($settings["servers"])) {
+			$settings["servers"] = array();
+		}
+
+		return $settings;
+	}
 
 	protected function defineSettings()
 	{
 		return array(
-			'varnish' => array(AttributeType::Bool, 'default' => false)
+			'varnish' => array(AttributeType::Bool, 'default' => false),
+			'uiWidget' => array(AttributeType::Bool, 'default' => false),
+			'servers' => array(AttributeType::Mixed, 'default' => array())
 		);
+	}
+
+	protected function initUIWidget()
+	{
+		if ( !craft()->request->isCpRequest() && craft()->userSession->isLoggedIn() )
+		{
+			$path = craft()->request->getRequestUri();
+			$host = craft()->request->getHostname();
+
+			$url = UrlHelper::getActionUrl('cacheMonster/purgeUrl', array(
+				'path'=> urlencode($path),
+				'host' => urlencode($host)
+			));
+			craft()->templates->includeCssResource('cacheMonster/css/widget.css');
+			craft()->templates->includeJsResource('cacheMonster/js/widget.js');
+			craft()->templates->includeJs('jQuery("body").cmUiWidget("'.$url.'")');
+		}
 	}
 
 }

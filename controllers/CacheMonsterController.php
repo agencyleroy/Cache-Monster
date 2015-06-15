@@ -56,7 +56,21 @@ class CacheMonsterController extends BaseController
 
 		// Exit
 		craft()->end();
+	}
 
+	public function actionPurgeUrl()
+	{
+		$host = urldecode(craft()->request->getParam('host'));
+		$path = urldecode(craft()->request->getParam('path'));
+
+		if($result = craft()->cacheMonster->purgeUrl($host, $path) ) {
+			$this->returnJson(array("success" => true));
+		}else {
+			header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
+			$this->returnErrorJson("An error occoured.");
+		}
+
+		craft()->end();
 	}
 
 }

@@ -1,0 +1,12 @@
+#cache-monster-widget {
+  position: fixed;
+  right: 50px;
+  bottom: 50px;
+  padding: 40px;
+  background-color: gray; }
+  #cache-monster-widget.error {
+    background-color: red; }
+  #cache-monster-widget.success {
+    background-color: green; }
+  #cache-monster-widget.loading {
+    background-color: yellow; }

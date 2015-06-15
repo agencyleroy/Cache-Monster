@@ -156,4 +156,45 @@ class CacheMonsterService extends BaseApplicationComponent
 
 	}
 
+	public function purgeUrl($host, $path)
+	{
+		$settings = craft()->plugins->getPlugin('cacheMonster')->getSettings();
+
+		$servers = $settings->servers;
+		if($servers && count($servers) > 0) {
+			$count = count($servers);
+			$return = true;
+
+			$batch = \Guzzle\Batch\BatchBuilder::factory()
+							->transferRequests($count)
+							->bufferExceptions()
+							->build();
+
+			$client = new \Guzzle\Http\Client();
+			$client->setDefaultOption('headers/Accept', '*/*');
+
+			foreach($servers as $server) {
+				$varnish = $server[0];
+				$request = $client->createRequest('PURGE', $varnish.$path);
+				$request->setHeader('Host', $host);
+
+				$batch->add($request);
+			}
+
+			$requests = $batch->flush();
+
+			foreach ($batch->getExceptions() as $e)
+			{
+				Craft::log('CacheMonster: an exception occurred: '.$e->getMessage(), LogLevel::Error);
+				$return = false;
+			}
+
+			$batch->clearExceptions();
+
+			return $return;
+		}
+
+		return false;
+	}
+
 }
