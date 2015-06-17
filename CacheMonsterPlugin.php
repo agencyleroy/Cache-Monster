@@ -157,7 +157,7 @@ class CacheMonsterPlugin extends BasePlugin
 
 	protected function initUIWidget()
 	{
-		if ( craft()->request->isSiteRequest() && raft()->userSession->isLoggedIn() )
+		if ( craft()->request->isSiteRequest() && craft()->userSession->isLoggedIn() )
 		{
 			$path = craft()->request->getRequestUri();
 			$host = craft()->request->getHostname();
