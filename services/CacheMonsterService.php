@@ -172,10 +172,16 @@ class CacheMonsterService extends BaseApplicationComponent
 
 			$client = new \Guzzle\Http\Client();
 			$client->setDefaultOption('headers/Accept', '*/*');
-
 			foreach($servers as $server) {
 				$varnish = $server[0];
-				$request = $client->createRequest('PURGE', $varnish.$path);
+
+				$request = $client->createRequest('PURGE', $varnish.$path, array(
+					'timeout'         => 5,
+    			'connect_timeout' => 1
+				));
+
+				$request->getCurlOptions()->set(CURLOPT_CONNECTTIMEOUT, 5);
+				$request->getCurlOptions()->set(CURLOPT_CONNECTTIMEOUT_MS, 1000);
 				$request->setHeader('Host', $host);
 
 				$batch->add($request);
@@ -185,7 +191,7 @@ class CacheMonsterService extends BaseApplicationComponent
 
 			foreach ($batch->getExceptions() as $e)
 			{
-				Craft::log('CacheMonster: an exception occurred: '.$e->getMessage(), LogLevel::Error);
+				CacheMonsterPlugin::log('CacheMonster: an exception occurred: '.$e->getMessage(), LogLevel::Error);
 				$return = false;
 			}
 

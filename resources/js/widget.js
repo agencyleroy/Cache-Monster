@@ -1,10 +1,15 @@
 (function( $ ) {
 
   $.fn.cmUiWidget = function(apiUrl) {
-    
-    jQuery('<div id="cache-monster-widget"><a href="#" class="button radius">Purge page</a></div>')
+
+    var template = "\
+      <div id='cache-monster-widget'> \
+        <button>Purge</button> \
+      </div>";
+
+    jQuery(template)
       .appendTo(this)
-      .find('a')
+      .find('button')
       .on('click', function(event) {
         event.preventDefault();
         $btn = $(this);
@@ -17,9 +22,11 @@
         $.getJSON(apiUrl)
          .done(function(){
            $widget.removeClass('loading').addClass('success');
+           console.log("Cache Monster success: "+apiUrl);
          })
          .fail(function(jqXHR, textStatus, errorThrown){
            $widget.removeClass('loading').addClass('error');
+           console.log("Cache Monster error: "+jqXHR.responseJSON.error);
          })
          .always(function(){
            $btn.prop('disabled', false);

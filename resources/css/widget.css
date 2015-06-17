@@ -1,12 +1,21 @@
 #cache-monster-widget {
+  border-radius: 10%;
   position: fixed;
   right: 50px;
   bottom: 50px;
-  padding: 40px;
-  background-color: gray; }
+  padding: 20px 15px;
+  background-color: gray;
+  transition: background-color 0.2s; }
   #cache-monster-widget.error {
     background-color: red; }
   #cache-monster-widget.success {
     background-color: green; }
   #cache-monster-widget.loading {
     background-color: yellow; }
+  #cache-monster-widget button {
+    color: #fff;
+    background-color: #6496c8;
+    text-shadow: -1px 1px #417cb8;
+    border: none; }
+    #cache-monster-widget button:hover {
+      background-color: #6496c8; }

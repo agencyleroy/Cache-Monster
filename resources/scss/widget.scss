@@ -1,17 +1,37 @@
+$loadingColor: yellow;
+$successColor: green;
+$errorColor: red;
+
+
 #cache-monster-widget {
+  border-radius: 10%;
   position: fixed;
   right: 50px;
   bottom: 50px;
-  padding: 40px;
+  padding: 20px 15px;
   background-color: gray;
+  transition: background-color 0.2s;
 
   &.error {
-    background-color: red;
+    background-color: $errorColor;
   }
+
   &.success {
-    background-color: green;
+    background-color: $successColor;
   }
+
   &.loading {
-    background-color: yellow;
+    background-color: $loadingColor;
+  }
+
+  button {
+    color: #fff;
+    background-color: #6496c8;
+    text-shadow: -1px 1px #417cb8;
+    border: none;
+
+    &:hover {
+      background-color: #6496c8;
+    }
   }
 }

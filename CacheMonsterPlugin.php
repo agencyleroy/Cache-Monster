@@ -157,7 +157,7 @@ class CacheMonsterPlugin extends BasePlugin
 
 	protected function initUIWidget()
 	{
-		if ( !craft()->request->isCpRequest() && craft()->userSession->isLoggedIn() )
+		if ( craft()->request->isSiteRequest() && raft()->userSession->isLoggedIn() )
 		{
 			$path = craft()->request->getRequestUri();
 			$host = craft()->request->getHostname();
@@ -166,8 +166,8 @@ class CacheMonsterPlugin extends BasePlugin
 				'path'=> urlencode($path),
 				'host' => urlencode($host)
 			));
-			craft()->templates->includeCssResource('cacheMonster/css/widget.css');
-			craft()->templates->includeJsResource('cacheMonster/js/widget.js');
+			craft()->templates->includeCssResource('cachemonster/css/widget.css');
+			craft()->templates->includeJsResource('cachemonster/js/widget.js');
 			craft()->templates->includeJs('jQuery("body").cmUiWidget("'.$url.'")');
 		}
 	}
