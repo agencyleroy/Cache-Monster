@@ -1,5 +1,5 @@
 $loadingColor: yellow;
-$successColor: green;
+$successColor: #219151;
 $errorColor: red;
 
 
@@ -8,8 +8,8 @@ $errorColor: red;
   position: fixed;
   right: 50px;
   bottom: 50px;
-  padding: 20px 15px;
-  background-color: gray;
+  padding: 20px 15px 0px;
+  background-color: #8e8e8e;
   transition: background-color 0.2s;
 
   &.error {
@@ -22,16 +22,5 @@ $errorColor: red;
 
   &.loading {
     background-color: $loadingColor;
-  }
-
-  button {
-    color: #fff;
-    background-color: #6496c8;
-    text-shadow: -1px 1px #417cb8;
-    border: none;
-
-    &:hover {
-      background-color: #6496c8;
-    }
   }
 }

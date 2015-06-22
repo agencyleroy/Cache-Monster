@@ -4,7 +4,7 @@
 
     var template = "\
       <div id='cache-monster-widget'> \
-        <button>Purge</button> \
+        <button class='button'>Purge cache</button> \
       </div>";
 
     jQuery(template)
@@ -23,6 +23,7 @@
          .done(function(){
            $widget.removeClass('loading').addClass('success');
            console.log("Cache Monster success: "+apiUrl);
+           window.location.reload(true);
          })
          .fail(function(jqXHR, textStatus, errorThrown){
            $widget.removeClass('loading').addClass('error');
