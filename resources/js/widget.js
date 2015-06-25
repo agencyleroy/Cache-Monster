@@ -9,7 +9,8 @@
 
     self = this;
 
-    jQuery.getJSON(actionUserLoggedIn, function(result) {
+    // NOTE: we use $.post instead of $.getJSON because varnish caches GETs
+    jQuery.post(actionUserLoggedIn, function(result) {
       if (result.logged_in == true) {
         jQuery(template)
           .appendTo(self)
@@ -23,22 +24,26 @@
             $btn.prop('disabled', true);
 
             //post currentUrl to endpoint
-            $.getJSON(actionPurgeUrl)
-             .done(function(){
+            jQuery.ajax({
+              type: 'POST',
+              url: actionPurgeUrl,
+              dataType: 'JSON'
+            })
+              .done(function(){
                $widget.removeClass('loading').addClass('success');
                console.log("Cache Monster success: "+actionPurgeUrl);
                window.location.reload(true);
-             })
-             .fail(function(jqXHR, textStatus, errorThrown){
+              })
+              .fail(function(jqXHR, textStatus, errorThrown){
                $widget.removeClass('loading').addClass('error');
                console.log("Cache Monster error: "+jqXHR.responseJSON.error);
-             })
-             .always(function(){
+              })
+              .always(function(){
                $btn.prop('disabled', false);
                window.setTimeout(function(){
                  $widget.removeClass('success error loading');
                }, 2000)
-             })
+              })
           });
       }
     });
