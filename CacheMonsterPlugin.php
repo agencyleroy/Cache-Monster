@@ -157,18 +157,21 @@ class CacheMonsterPlugin extends BasePlugin
 
 	protected function initUIWidget()
 	{
-		if ( craft()->request->isSiteRequest() && craft()->userSession->isLoggedIn() )
+		// include this in every site request. show the widget to logged-in users with JS.
+		if ( craft()->request->isSiteRequest() )
 		{
 			$path = craft()->request->getRequestUri();
 			$host = craft()->request->getHostname();
 
-			$url = UrlHelper::getActionUrl('cacheMonster/purgeUrl', array(
+			$actionUserLoggedIn = UrlHelper::getActionUrl('cacheMonster/userLoggedIn');
+			$actionPurgeUrl = UrlHelper::getActionUrl('cacheMonster/purgeUrl', array(
 				'path'=> urlencode($path),
 				'host' => urlencode($host)
 			));
+
 			craft()->templates->includeCssResource('cachemonster/css/widget.css');
 			craft()->templates->includeJsResource('cachemonster/js/widget.js');
-			craft()->templates->includeJs('jQuery("body").cmUiWidget("'.$url.'")');
+			craft()->templates->includeJs('jQuery("body").cmUiWidget("' . $actionUserLoggedIn . '", "'.$actionPurgeUrl.'")');
 		}
 	}
 

@@ -13,7 +13,7 @@ namespace Craft;
 class CacheMonsterController extends BaseController
 {
 
-	protected $allowAnonymous = array('actionCrawlAndWarm');
+	protected $allowAnonymous = array('actionCrawlAndWarm', 'actionUserLoggedIn');
 
 	/**
 	 * Update our url cache and force run the warming Task
@@ -73,4 +73,9 @@ class CacheMonsterController extends BaseController
 		craft()->end();
 	}
 
+	public function actionUserLoggedIn()
+	{
+		$this->requireAjaxRequest();
+		$this->returnJson(array('logged_in' => craft()->userSession->isLoggedIn()));
+	}
 }

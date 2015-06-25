@@ -1,43 +1,49 @@
 (function( $ ) {
 
-  $.fn.cmUiWidget = function(apiUrl) {
+  $.fn.cmUiWidget = function(actionUserLoggedIn, actionPurgeUrl) {
 
     var template = "\
       <div id='cache-monster-widget'> \
         <button class='button'>Purge cache</button> \
       </div>";
 
-    jQuery(template)
-      .appendTo(this)
-      .find('button')
-      .on('click', function(event) {
-        event.preventDefault();
-        $btn = $(this);
-        $widget = $btn.parent();
+    self = this;
 
-        $widget.addClass('loading');
-        $btn.prop('disabled', true);
+    jQuery.getJSON(actionUserLoggedIn, function(result) {
+      if (result.logged_in == true) {
+        jQuery(template)
+          .appendTo(self)
+          .find('button')
+          .on('click', function(event) {
+            event.preventDefault();
+            $btn = $(this);
+            $widget = $btn.parent();
 
-        //post currentUrl to endpoint
-        $.getJSON(apiUrl)
-         .done(function(){
-           $widget.removeClass('loading').addClass('success');
-           console.log("Cache Monster success: "+apiUrl);
-           window.location.reload(true);
-         })
-         .fail(function(jqXHR, textStatus, errorThrown){
-           $widget.removeClass('loading').addClass('error');
-           console.log("Cache Monster error: "+jqXHR.responseJSON.error);
-         })
-         .always(function(){
-           $btn.prop('disabled', false);
-           window.setTimeout(function(){
-             $widget.removeClass('success error loading');
-           }, 2000)
-         })
-      });
+            $widget.addClass('loading');
+            $btn.prop('disabled', true);
 
-      return this;
+            //post currentUrl to endpoint
+            $.getJSON(actionPurgeUrl)
+             .done(function(){
+               $widget.removeClass('loading').addClass('success');
+               console.log("Cache Monster success: "+actionPurgeUrl);
+               window.location.reload(true);
+             })
+             .fail(function(jqXHR, textStatus, errorThrown){
+               $widget.removeClass('loading').addClass('error');
+               console.log("Cache Monster error: "+jqXHR.responseJSON.error);
+             })
+             .always(function(){
+               $btn.prop('disabled', false);
+               window.setTimeout(function(){
+                 $widget.removeClass('success error loading');
+               }, 2000)
+             })
+          });
+      }
+    });
+
+    return this;
   };
 
 }( jQuery ));
