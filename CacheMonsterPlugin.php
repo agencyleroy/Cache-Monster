@@ -128,7 +128,7 @@ class CacheMonsterPlugin extends BasePlugin
 						craft()->cache->delete('cacheMonsterPaths-' . $elementId . '-' . $locale);
 					}
 
-					// craft()->cacheMonster->makeTask('CacheMonster_Warm', $paths);
+					craft()->cacheMonster->makeTask('CacheMonster_Warm', $paths);
 				}
 			}
 		});

@@ -44,7 +44,7 @@ class CacheMonster_WarmTask extends BaseTask
 	public function getTotalSteps()
 	{
 		// Get the actual paths out of the settings
-		$paths = $this->getSettings()->paths;
+		$paths = $this->model->getAttribute('settings')['paths'];
 
 		// Make our internal paths array
 		$this->_paths = array();
@@ -83,17 +83,16 @@ class CacheMonster_WarmTask extends BaseTask
 		// Loop the paths in this step
 		foreach ($this->_paths[$step] as $path)
 		{
-
 			// Make the url, stripping 'site:' from the path if it exists
-			$newPath = preg_replace('/site:/', '', $path, 1);
-			$url = UrlHelper::getSiteUrl($newPath);
+			$path['uri'] = preg_replace('/site:/', '', $path['uri'], 1);
+			// make a request to http, hope that the site has proper TLS forwarding set up
+			$url = 'http://' . $path['host'] . '/' . $path['uri'];
 
 			// Create the GET request
 			$request = $client->get($url);
 
 			// Add it to the batch
 			$batch->add($request);
-
 		}
 
 		// Flush the queue and retrieve the flushed items
