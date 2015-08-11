@@ -21,6 +21,8 @@ class CacheMonster_PurgeTask extends BaseTask
 	 */
 	private $_paths;
 
+	private $pluginSettings;
+
 
 	// Public Methods
 	// =========================================================================
@@ -44,7 +46,9 @@ class CacheMonster_PurgeTask extends BaseTask
 	public function getTotalSteps()
 	{
 		// Get the actual paths out of the settings
-		$paths = $this->getSettings()->paths;
+		$paths = $this->model->getAttribute('settings')['paths'];
+
+		$this->pluginSettings = craft()->plugins->getPlugin('cacheMonster')->getSettings();
 
 		// Make our internal paths array
 		$this->_paths = array();
@@ -74,6 +78,8 @@ class CacheMonster_PurgeTask extends BaseTask
 						->bufferExceptions()
 						->build();
 
+		$servers = $this->pluginSettings->servers;
+
 		// Make the client
 		$client = new \Guzzle\Http\Client();
 
@@ -83,17 +89,25 @@ class CacheMonster_PurgeTask extends BaseTask
 		// Loop the paths in this step
 		foreach ($this->_paths[$step] as $path)
 		{
+			foreach ($servers as $server)
+			{
+				$varnish = $server[0];
 
-			// Make the url, stripping 'site:' from the path if it exists
-			$newPath = preg_replace('/site:/', '', $path, 1);
-			$url = UrlHelper::getSiteUrl($newPath);
+				// Make the url, stripping 'site:' from the path if it exists
+				$path['uri'] = preg_replace('/site:/', '', $path['uri'], 1);
 
-			// Create the PURGE request
-			$request = $client->createRequest('PURGE', $url);
+				$request = $client->createRequest('PURGE', $varnish . '/' . $path['uri'], array(
+					'timeout'         => 5,
+					'connect_timeout' => 1
+				));
 
-			// Add it to the batch
-			$batch->add($request);
+				$request->getCurlOptions()->set(CURLOPT_CONNECTTIMEOUT, 5);
+				$request->getCurlOptions()->set(CURLOPT_CONNECTTIMEOUT_MS, 1000);
+				$request->setHeader('Host', $path['host']);
 
+				// Add it to the batch
+				$batch->add($request);
+			}
 		}
 
 		// Flush the queue and retrieve the flushed items

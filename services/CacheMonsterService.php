@@ -20,50 +20,80 @@ class CacheMonsterService extends BaseApplicationComponent
 	 * @param  int           $elementId the elementId of the element we want purging
 	 * @return array                    an array of paths to purge
 	 */
-	public function getPaths($elementId)
+	// public function getPaths($elementId, $locale)
+	public function getPaths($elementId, $initialPath, $locale)
 	{
+		// first path
+		$purgePaths[0] = array(
+			'uri'    => $initialPath
+		);
 
-		// Get the cache ids that relate to this element
-		$query = craft()->db->createCommand()
-			->selectDistinct('cacheId')
-			->from('templatecacheelements')
-			->where('elementId = :elementId', array(':elementId' => $elementId));
+		// find any sub-pages
+		$branches = craft()->db->createCommand()
+			->select('uri')
+			->from('elements_i18n')
+			// entries that are subpaths...
+			->where(array('like', 'uri', $initialPath . '%'))
+			// but exclude the original entry itself
+			->andWhere('uri != :uri', array('uri' => $initialPath))
+			->andWhere('locale = :locale', array('locale' => $locale))
+			->queryColumn();
 
-		$cacheIds = $query->queryColumn();
-
-		if ($cacheIds)
+		// add the found paths to the paths to purge
+		foreach ($branches as $branchUri)
 		{
+			$purgePaths[] = array(
+				'uri'    => $branchUri
+			);
+		}
 
-			// Get the paths that those caches related to
-			$query = craft()->db->createCommand()
-				->selectDistinct('path')
-				->from('templatecaches')
-				->where(array('in', 'id', $cacheIds));
+		// find any parent pages
+		$parentPages = array();
 
-			$paths = $query->queryColumn();
+		if (strpos($initialPath, '/') !== false)
+		{
+			// then there are parent pages
+			$builtUpUri = '';
 
-			// Return an array of them
-			if ($paths)
+			// break up the uri into its parts and loop over them
+			foreach (explode('/', $initialPath) as $pathPart)
 			{
 
-				if ( ! is_array($paths) )
+				// make sure that there is a slash in between each part of the path, but never at the beginning
+				if (!empty($builtUpUri))
 				{
-					$paths = array($paths);
+					$builtUpUri .= '/';
 				}
 
-				return $paths;
-			}
-			else
-			{
-				return false;
-			}
+				// add one part of the path at a time
+				$builtUpUri .= $pathPart;
 
+				$parentPages[] = array(
+					'uri'    => $builtUpUri
+				);
+			}
 		}
-		else
+
+		$purgePaths = array_merge($parentPages, $purgePaths);
+
+		// add host, according to the locale to host mappings specified in the settings
+		// maybe one day in the future we'll support purging multiple hosts at once
+		$settings = craft()->plugins->getPlugin('cacheMonster')->getSettings();
+
+		$localeHostMap = array();
+
+		// don't flip the array, just turn it :P
+		foreach ($settings->localeHosts as $host) {
+			// for example  $localeHostMap['en_us'] => 'google.com'
+			$localeHostMap[$host[0]] = $host[1];
+		}
+
+		foreach ($purgePaths as $key => $purgePath)
 		{
-			return false;
+			$purgePaths[$key]['host'] = $localeHostMap[$locale];
 		}
 
+		return $purgePaths;
 	}
 
 
@@ -177,7 +207,7 @@ class CacheMonsterService extends BaseApplicationComponent
 
 				$request = $client->createRequest('PURGE', $varnish.$path, array(
 					'timeout'         => 5,
-    			'connect_timeout' => 1
+					'connect_timeout' => 1
 				));
 
 				$request->getCurlOptions()->set(CURLOPT_CONNECTTIMEOUT, 5);

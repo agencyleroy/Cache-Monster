@@ -53,7 +53,8 @@ class CacheMonsterPlugin extends BasePlugin
 		$plugin = craft()->plugins->getPlugin('cachemonster');
 		$this->_settings = $plugin->getSettings();
 
-		if ($this->_settings->uiWidget) {
+		if ($this->_settings->uiWidget)
+		{
 			$this->initUIWidget();
 		}
 
@@ -65,25 +66,30 @@ class CacheMonsterPlugin extends BasePlugin
 		{
 
 			// Get the element ID
-			$elementId = $event->params['element']->id;
+			$element = $event->params['element'];
+
+			$initialPath = $element->uri;
+
+			// for some reason, this function gets called twice, once with an empty path. we're not interested in that.
+			if (empty($initialPath)) return;
+
+			$elementId = $element->id;
+			$locale = $element->locale;
 
 			// If we have an element, go ahead and get its paths
-			if ( $elementId )
+			if ($elementId)
 			{
-
 				// Clear our cacheMonsterPaths cache, just in case
-				craft()->cache->delete('cacheMonsterPaths-'.$elementId);
+				craft()->cache->delete('cacheMonsterPaths-' . $elementId . '-' . $locale);
 
 				// Get the paths we need
-				$paths = craft()->cacheMonster->getPaths($elementId);
+				$paths = craft()->cacheMonster->getPaths($elementId, $initialPath, $locale);
 
 				if ($paths)
 				{
-
 					// Store them in the cache so we can get them after
 					// the element has actually saved
-					craft()->cache->set('cacheMonsterPaths-'.$elementId, $paths);
-
+					craft()->cache->set('cacheMonsterPaths-' . $elementId . '-' . $locale, $paths);
 				}
 
 			}
@@ -96,51 +102,58 @@ class CacheMonsterPlugin extends BasePlugin
 		 */
 		craft()->on('elements.onSaveElement', function(Event $event)
 		{
+			$element = $event->params['element'];
 
-			// Get the element ID
-			$elementId = $event->params['element']->id;
+			$elementId = $element->id;
+			$startingPath = $element->uri;
+			$locale = $element->locale;
+
 
 			if ($elementId)
 			{
+				// Remove this, as it might cause issues if its used again
+
+				// CacheMonsterPlugin::log(print_r($paths, true), LogLevel::Error);
 
 				// Get the paths out of the cache for that element
-				$paths = craft()->cache->get('cacheMonsterPaths-'.$elementId);
-
-				// Remove this, as it might cause issues if its used again
-				craft()->cache->delete('cacheMonsterPaths-'.$elementId);
+				$paths = craft()->cache->get('cacheMonsterPaths-' . $elementId . '-' . $locale);
 
 				// Use those paths to purge (if on) and warm
 				if ($paths)
 				{
-
 					if ($this->_settings['varnish'])
 					{
 						craft()->cacheMonster->makeTask('CacheMonster_Purge', $paths);
+
+						craft()->cache->delete('cacheMonsterPaths-' . $elementId . '-' . $locale);
 					}
 
-					craft()->cacheMonster->makeTask('CacheMonster_Warm', $paths);
-
+					// craft()->cacheMonster->makeTask('CacheMonster_Warm', $paths);
 				}
-
 			}
-
 		});
-
 	}
 
 	public function getSettingsHtml()
 	{
 		return craft()->templates->render('cacheMonster/settings', array(
-			'settings' => $this->getSettings(),
-			'servers' => $this->getSettings()->servers
+			'settings'    => $this->getSettings(),
+			'servers'     => $this->getSettings()->servers,
+			'localeHosts' => $this->getSettings()->localeHosts
 		));
 	}
 
 	public function prepSettings($settings)
 	{
 		// Empty all servers
-		if(!isset($settings["servers"])) {
-			$settings["servers"] = array();
+		if (!isset($settings['servers']))
+		{
+			$settings['servers'] = array();
+		}
+
+		if (!isset($settings['localeHosts']))
+		{
+			$settings['localeHosts'] = array();
 		}
 
 		return $settings;
@@ -149,9 +162,10 @@ class CacheMonsterPlugin extends BasePlugin
 	protected function defineSettings()
 	{
 		return array(
-			'varnish' => array(AttributeType::Bool, 'default' => false),
-			'uiWidget' => array(AttributeType::Bool, 'default' => false),
-			'servers' => array(AttributeType::Mixed, 'default' => array())
+			'varnish'        => array(AttributeType::Bool, 'default' => false),
+			'uiWidget'       => array(AttributeType::Bool, 'default' => false),
+			'servers'        => array(AttributeType::Mixed, 'default' => array()),
+			'localeHosts'    => array(AttributeType::Mixed, 'default' => array())
 		);
 	}
 
